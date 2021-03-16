@@ -1,2 +1,2 @@
-# Embedded-Project
-Automatic Flora Monitoring System
+# Automated Flora Monitor
+Embedded Project
