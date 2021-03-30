@@ -89,7 +89,10 @@ int main(void)
   MX_GPIO_Init();
   MX_USART2_UART_Init();
   /* USER CODE BEGIN 2 */
-
+  GPIOA->OSPEEDR = GPIO_OSPEEDR_OSPEED12;
+  GPIOA->OTYPER = 0x00000000UL;
+  GPIOA->PUPDR = 0x00000000UL;
+  GPIOA->MODER = 0x01000000UL;
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -97,13 +100,7 @@ int main(void)
   while (1)
   {
     /* USER CODE END WHILE */
-	//HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_SET);
-	  GPIOA->BSRR = (uint16_t)0x0020;
-	  HAL_Delay(1000);
-	  GPIOA->BSRR = (uint32_t)0x0020 << 16U;
-	  HAL_Delay(1000);
-	//HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
-	//HAL_Delay(1000);
+	GPIOA->BSRR = GPIO_BSRR_BS12;
     /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */
