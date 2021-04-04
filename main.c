@@ -36,7 +36,8 @@
 
 /* Private macro -------------------------------------------------------------*/
 /* USER CODE BEGIN PM */
-
+#define ON_STATE	1
+#define OFF_STATE	0
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
@@ -89,10 +90,13 @@ int main(void)
   MX_GPIO_Init();
   MX_USART2_UART_Init();
   /* USER CODE BEGIN 2 */
-  GPIOA->OSPEEDR = GPIO_OSPEEDR_OSPEED12;
-  GPIOA->OTYPER = 0x00000000UL;
-  GPIOA->PUPDR = 0x00000000UL;
-  GPIOA->MODER = 0x01000000UL;
+  GPIOA->OSPEEDR = 0;
+  GPIOA->OTYPER = 0;
+  GPIOA->PUPDR = 1<<22;
+  GPIOA->MODER = 1<<24;
+
+  GPIOA->BSRR = GPIO_BSRR_BR12;
+  _Bool STATE = OFF_STATE;
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -100,7 +104,19 @@ int main(void)
   while (1)
   {
     /* USER CODE END WHILE */
-	GPIOA->BSRR = GPIO_BSRR_BS12;
+    if((GPIOA->IDR & GPIO_IDR_ID11) != GPIO_IDR_ID11)
+	{
+    	if(STATE == OFF_STATE)
+    	{
+    		GPIOA->BSRR = GPIO_BSRR_BS12;
+    		STATE = ON_STATE;
+    	}
+    	else
+    	{
+    		GPIOA->BSRR = GPIO_BSRR_BR12;
+    		STATE = OFF_STATE;
+    	}
+	}
     /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */
@@ -214,6 +230,12 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(LD2_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : PA6 */
+  GPIO_InitStruct.Pin = GPIO_PIN_6;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
 }
 
