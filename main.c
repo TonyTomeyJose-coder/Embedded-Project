@@ -22,7 +22,8 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include <stdio.h>
+#include <string.h>
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -41,6 +42,8 @@
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
+TIM_HandleTypeDef htim2;
+
 UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
@@ -51,6 +54,7 @@ UART_HandleTypeDef huart2;
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_USART2_UART_Init(void);
+static void MX_TIM2_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
@@ -67,8 +71,8 @@ static void MX_USART2_UART_Init(void);
 int main(void)
 {
   /* USER CODE BEGIN 1 */
-
-  /* USER CODE END 1 */
+  char mess1[10] = {'T', 'r', 'u', 'e', '\n', '\r'};
+  char mess2[10] = {'F', 'a', 'l', 's', 'e', '\n', '\r'};  /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
 
@@ -89,11 +93,12 @@ int main(void)
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_USART2_UART_Init();
+  MX_TIM2_Init();
   /* USER CODE BEGIN 2 */
-  GPIOA->OSPEEDR = 0;
-  GPIOA->OTYPER = 0;
-  GPIOA->PUPDR = 1<<22;
-  GPIOA->MODER = 1<<24;
+  GPIOA->OSPEEDR &= ~(1<<25 || 1<<24);
+  GPIOA->OTYPER &= ~(1<<12);
+  GPIOA->PUPDR |= 1<<22;
+  GPIOA->MODER |= 1<<24;
 
   GPIOA->BSRR = GPIO_BSRR_BR12;
   _Bool STATE = OFF_STATE;
@@ -104,19 +109,23 @@ int main(void)
   while (1)
   {
     /* USER CODE END WHILE */
-    if((GPIOA->IDR & GPIO_IDR_ID11) != GPIO_IDR_ID11)
-	{
-    	if(STATE == OFF_STATE)
-    	{
-    		GPIOA->BSRR = GPIO_BSRR_BS12;
-    		STATE = ON_STATE;
-    	}
-    	else
-    	{
-    		GPIOA->BSRR = GPIO_BSRR_BR12;
-    		STATE = OFF_STATE;
-    	}
-	}
+	  if((GPIOA->IDR & GPIO_IDR_ID11) != GPIO_IDR_ID11)
+	  	{
+	      	if(STATE == OFF_STATE)
+	      	{
+	      		GPIOA->BSRR = GPIO_BSRR_BS12;
+	      		STATE = ON_STATE;
+	      		HAL_UART_Transmit(&huart2, mess1, strlen(mess1), HAL_MAX_DELAY);
+	      		HAL_Delay(200);
+	      	}
+	      	else
+	      	{
+	      		GPIOA->BSRR = GPIO_BSRR_BR12;
+	      		STATE = OFF_STATE;
+	      		HAL_UART_Transmit(&huart2, mess2, strlen(mess2), HAL_MAX_DELAY);
+	      		HAL_Delay(200);
+	      	}
+	  	}
     /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */
@@ -165,6 +174,51 @@ void SystemClock_Config(void)
   {
     Error_Handler();
   }
+}
+
+/**
+  * @brief TIM2 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_TIM2_Init(void)
+{
+
+  /* USER CODE BEGIN TIM2_Init 0 */
+
+  /* USER CODE END TIM2_Init 0 */
+
+  TIM_ClockConfigTypeDef sClockSourceConfig = {0};
+  TIM_MasterConfigTypeDef sMasterConfig = {0};
+
+  /* USER CODE BEGIN TIM2_Init 1 */
+
+  /* USER CODE END TIM2_Init 1 */
+  htim2.Instance = TIM2;
+  htim2.Init.Prescaler = 84 - 1;
+  htim2.Init.CounterMode = TIM_COUNTERMODE_UP;
+  htim2.Init.Period = 4294967295 - 1;
+  htim2.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+  htim2.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+  if (HAL_TIM_Base_Init(&htim2) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
+  if (HAL_TIM_ConfigClockSource(&htim2, &sClockSourceConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
+  sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
+  if (HAL_TIMEx_MasterConfigSynchronization(&htim2, &sMasterConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN TIM2_Init 2 */
+
+  /* USER CODE END TIM2_Init 2 */
+
 }
 
 /**
@@ -230,12 +284,6 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(LD2_GPIO_Port, &GPIO_InitStruct);
-
-  /*Configure GPIO pin : PA6 */
-  GPIO_InitStruct.Pin = GPIO_PIN_6;
-  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
 }
 
