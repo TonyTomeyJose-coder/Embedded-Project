@@ -1,3 +1,2 @@
-# Automated Flora Monitor
-Embedded Project
-Hi, I have access to this part of the file. 
+# Automated Flora Monitor System
+- Includes the main file and an image of the super loop.
